@@ -22,6 +22,7 @@ for episode in range(1, 4001):
     state = env.reset()
     episode_reward = 0
     while True:
+        env.render()
         noise = np.random.random((1, env.action_space.n)) / (episode**2.)
         action = np.argmax(q[state, :] + noise) 
         state2, reward, done, _ = env.step(action)

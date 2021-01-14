@@ -5,34 +5,27 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-class Net(nn.Module):
-    def __init__(self):
-        super(Net, self).__init__()
-        self.hidden1 = nn.Linear(512, 10)
-        self.hidden2 = nn.Linear(256, 10)
-        self.hidden3 = nn.Linear(64, 10)
-        self.hidden4 = nn.Linear(2)
-    def forward(self, x):
-        x = self.hidden2(self.hidden1(x))
-        x = self.hidden2(F.relu(self.hidden3(x)))
-
 env = gym.make('CartPole-v0')
 highscore = 0
 # q_table = np.zeros([env.observation_space.n, env.action_space.n])
+n_actions = 2
+n_obs = 4
+q = np.zeros((n_obs, n_actions))
+lr = 0.9
+discount_factor = 0.8
 
-for i_episode in range(20):
-    observation = env.reset()
+for episode in range(1, 4001):
+    state = env.reset()
     points = 0
     while True:
         env.render()
-        # print(observation)
-        # action = env.action_space.sample()
-        action = 1 if observation[2] > 0 else 0
-        observation, reward, done, info = env.step(action)
+        noise = np.random.random((1, n_actions)) / (episode **2.)
+        action = np.argmax(q[state, :] + noise)
+        newstate, reward, done, _ = env.step(action)
+        qtarget = reward + discount_factor * np.max(q[newstate, :])
+        q[observation, action] = (1 - lr) * q[state, action] + lr * qtarget
         points += reward
+        state = newstate
         if done:
-            if points > highscore:
-                highscore = points
-                print("New high score: " + str(highscore))
             break
 env.close()
